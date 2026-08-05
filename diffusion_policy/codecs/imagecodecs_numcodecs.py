@@ -711,8 +711,12 @@ class JpegXl(Codec):
         lossless=None,
         decodingspeed=None,
         photometric=None,
+        bitspersample=None,
         planar=None,
+        primaries=None,
+        transfer=None,
         usecontainer=None,
+        squeeze=None,
         # decode
         index=None,
         keeporientation=None,
@@ -812,8 +816,12 @@ class JpegXl(Codec):
         self.lossless = bool(lossless)
         self.decodingspeed = decodingspeed
         self.photometric = photometric
+        self.bitspersample = bitspersample
         self.planar = planar
+        self.primaries = primaries
+        self.transfer = transfer
         self.usecontainer = usecontainer
+        self.squeeze = squeeze
         self.index = index
         self.keeporientation = keeporientation
         self.numthreads = numthreads
@@ -829,7 +837,10 @@ class JpegXl(Codec):
             lossless=self.lossless,
             decodingspeed=self.decodingspeed,
             photometric=self.photometric,
+            bitspersample=self.bitspersample,
             planar=self.planar,
+            primaries=self.primaries,
+            transfer=self.transfer,
             usecontainer=self.usecontainer,
             numthreads=self.numthreads,
         )
