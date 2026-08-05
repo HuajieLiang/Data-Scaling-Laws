@@ -1,0 +1,35 @@
+# pick_cube 双相机任务配置。
+#
+# 继承单臂 UMI 的全部低维状态和 action 定义，只增加第二路 RGB 观测。
+# camera0_rgb 是 USB/腕部视角，camera1_rgb 是 top/俯视视角；两路图像在
+# Zarr 中已经逐帧对齐，并由 TimmObsEncoder 分别编码后拼接到条件特征中。
+defaults:
+  - umi
+  - _self_
+
+name: umi_2cam
+
+# 数据时间戳统计得到约 23.13 Hz。源数据已经对齐且没有再降采样，因此观测和
+# action 均按连续帧采样；这也与 conversion.json 中的推荐值一致。
+dataset_frequeny: 23.129560978674107
+obs_down_sample_steps: 1
+action_down_sample_steps: 1
+
+shape_meta:
+  obs:
+    camera1_rgb:
+      shape: [3, 224, 224]
+      horizon: ${task.img_obs_horizon}
+      latency_steps: 0
+      down_sample_steps: ${task.obs_down_sample_steps}
+      type: rgb
+      ignore_by_policy: false
+
+# 父配置用 YAML anchor 把 shape_meta 传给 Dataset；Hydra 深度合并后，该 anchor
+# 仍指向合并前的单相机对象。这里显式重新绑定，否则策略会期待 camera1_rgb，
+# 但 Dataset 不会读取它，训练第一步就会因缺少 key 失败。
+dataset:
+  shape_meta: ${task.shape_meta}
+
+in_the_wild_dataset:
+  shape_meta: ${task.shape_meta}
