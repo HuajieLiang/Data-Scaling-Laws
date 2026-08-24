@@ -2,22 +2,12 @@
 set -euo pipefail
 
 project_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-default_python_bin=/gpfs/huajieliang/conda_env/smolvla/bin/python
-if [[ ! -x "$default_python_bin" ]]; then
-  default_python_bin=/home/smore/miniconda3/envs/smolvla/bin/python
-fi
-python_bin=${PYTHON_BIN:-$default_python_bin}
-dataset_path=${DATASET_PATH:-data/dataset_real_zarr/pick_cube_1cam/dataset.zarr.zip}
+python_bin=${PYTHON_BIN:-/gpfs/huajieliang/conda_env/smolvla/bin/python}
 logging_time=$(date "+%d-%H.%M.%S")
 now_date=$(date "+%Y.%m.%d")
 run_dir="data/outputs/${now_date}/${logging_time: -8}_pick_cube_usb"
 
 cd "$project_dir"
-if [[ ! -f "$dataset_path" ]]; then
-  echo "Dataset not found: $project_dir/$dataset_path" >&2
-  exit 1
-fi
-echo "Dataset: $project_dir/$dataset_path"
 echo "Output directory: $project_dir/$run_dir"
 
 # CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-2}"
@@ -28,7 +18,7 @@ exec "$python_bin" -m accelerate.commands.launch --mixed_precision bf16 train.py
   "multi_run.wandb_name_base=$logging_time" \
   "hydra.run.dir=$run_dir" \
   "hydra.sweep.dir=$run_dir" \
-  "task.dataset_path=$dataset_path" \
+  "task.dataset_path=data/dataset_real_zarr/pick_cube_1cam/dataset.zarr.zip" \
   "task.dataset.dataset_idx=null" \
   "task.dataset.val_ratio=0.2" \
   "training.num_epochs=500" \
