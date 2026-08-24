@@ -11,12 +11,12 @@ set -euo pipefail
 # 无论从哪个工作目录调用脚本，都切换到 Data-Scaling-Laws 根目录，保证 Hydra
 # 配置和 data/dataset/pick_cube_2cam 使用稳定的项目内相对路径。
 project_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-python_bin=${PYTHON_BIN:-/home/descfly/miniconda3/envs/smolvla/bin/python}
-dataset_path="data/dataset/pick_cube_2cam/dataset.zarr.zip"
+python_bin=${PYTHON_BIN:-/home/smore/miniconda3/envs/smolvla/bin/python}
+dataset_path=${DATASET_PATH:-data/dataset_umi_zarr/pick_cube2_real_2cam/dataset.zarr.zip}
 
 logging_time=$(date "+%d-%H.%M.%S")
 now_date=$(date "+%Y.%m.%d")
-run_dir="data/outputs/${now_date}/${logging_time: -8}_pick_cube_2cam"
+run_dir="data/outputs/${now_date}/${logging_time: -8}_pick_cube_base_relative_2cam"
 
 cd "$project_dir"
 
@@ -44,6 +44,6 @@ exec "$python_bin" -m accelerate.commands.launch --mixed_precision bf16 train.py
   "dataloader.batch_size=8" \
   "val_dataloader.batch_size=8" \
   "logging.mode=offline" \
-  "logging.name=${logging_time}_pick_cube_2cam" \
+  "logging.name=${logging_time}_pick_cube_base_relative_2cam" \
   "policy.obs_encoder.model_name=vit_base_patch14_dinov2.lvd142m" \
   "policy.obs_encoder.share_rgb_model=true"
