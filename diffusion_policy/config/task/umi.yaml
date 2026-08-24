@@ -86,8 +86,10 @@ task_name: &task_name umi
 dataset_path: example_demo_session/dataset.zarr.zip
 in_the_wild_dataset_path: example_demo_session/in_the_wild_dataset.zarr.zip
 pose_repr: &pose_repr
-  obs_pose_repr: relative # abs or rel
-  action_pose_repr: relative # abs or rel or delta
+  # Input Zarr has already been re-zeroed per episode while retaining robot
+  # base axes. UmiDataset must not rebase it against the current TCP.
+  obs_pose_repr: episode_base_relative
+  action_pose_repr: episode_base_relative
 
 env_runner:
   _target_: diffusion_policy.env_runner.real_pusht_image_runner.RealPushTImageRunner

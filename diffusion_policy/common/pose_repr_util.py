@@ -50,6 +50,12 @@ def convert_pose_mat_rep(pose_mat, base_pose_mat, pose_rep='abs', backward=False
         # training transform
         if pose_rep == 'abs':
             return pose_mat
+        elif pose_rep == 'episode_base_relative':
+            # The replay buffer is already canonicalized per episode:
+            # p_rel=p-p0 and R_rel=R@R0^-1, with both axes in robot base.
+            # Identity here is intentional and prevents a second current-frame
+            # rebase inside UmiDataset.
+            return pose_mat
         elif pose_rep == 'rel':
             # legacy buggy implementation
             # for compatibility
@@ -81,6 +87,11 @@ def convert_pose_mat_rep(pose_mat, base_pose_mat, pose_rep='abs', backward=False
     else:
         # eval transform
         if pose_rep == 'abs':
+            return pose_mat
+        elif pose_rep == 'episode_base_relative':
+            # Outside UmiDataset, callers that start from an absolute robot pose
+            # must explicitly supply the episode origin and use the dedicated
+            # inference paths.  This branch only denotes already-canonical data.
             return pose_mat
         elif pose_rep == 'rel':
             # legacy buggy implementation

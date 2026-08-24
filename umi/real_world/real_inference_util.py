@@ -12,6 +12,25 @@ from umi.common.pose_util import (
 from diffusion_policy.model.common.rotation_transformer import \
     RotationTransformer
 
+
+EPISODE_BASE_RELATIVE = 'episode_base_relative'
+
+
+def _to_episode_base_relative(pose_mat: np.ndarray, start_pose_mat: np.ndarray):
+    """Change the origin to episode start without rotating robot-base axes."""
+    out = np.copy(pose_mat)
+    out[...,:3,3] = pose_mat[...,:3,3] - start_pose_mat[:3,3]
+    out[...,:3,:3] = pose_mat[...,:3,:3] @ np.linalg.inv(start_pose_mat[:3,:3])
+    return out
+
+
+def _from_episode_base_relative(pose_mat: np.ndarray, start_pose_mat: np.ndarray):
+    """Restore absolute robot-base poses from the canonical model output."""
+    out = np.copy(pose_mat)
+    out[...,:3,3] = pose_mat[...,:3,3] + start_pose_mat[:3,3]
+    out[...,:3,:3] = pose_mat[...,:3,:3] @ start_pose_mat[:3,:3]
+    return out
+
 def get_real_obs_resolution(
         shape_meta: dict
         ) -> Tuple[int, int]:
@@ -106,11 +125,20 @@ def get_real_umi_obs_dict(
         ], axis=-1))
 
         # solve reltaive obs
-        obs_pose_mat = convert_pose_mat_rep(
-            pose_mat, 
-            base_pose_mat=pose_mat[-1],
-            pose_rep=obs_pose_repr,
-            backward=False)
+        if obs_pose_repr == EPISODE_BASE_RELATIVE:
+            if episode_start_pose is None:
+                raise ValueError('episode_start_pose is required for episode_base_relative')
+            robot_id = int(robot_prefix.removeprefix('robot'))
+            start_pose_mat = pose_to_mat(
+                np.asarray(episode_start_pose[robot_id], dtype=np.float64)
+            )
+            obs_pose_mat = _to_episode_base_relative(pose_mat, start_pose_mat)
+        else:
+            obs_pose_mat = convert_pose_mat_rep(
+                pose_mat,
+                base_pose_mat=pose_mat[-1],
+                pose_rep=obs_pose_repr,
+                backward=False)
 
         obs_pose = mat_to_pose10d(obs_pose_mat)
         obs_dict_np[robot_prefix + '_eef_pos'] = obs_pose[...,:3]
@@ -158,11 +186,16 @@ def get_real_umi_obs_dict(
             # get start pose
             start_pose = episode_start_pose[robot_id]
             start_pose_mat = pose_to_mat(start_pose)
-            rel_obs_pose_mat = convert_pose_mat_rep(
-                pose_mat,
-                base_pose_mat=start_pose_mat,
-                pose_rep='relative',
-                backward=False)
+            if obs_pose_repr == EPISODE_BASE_RELATIVE:
+                rel_obs_pose_mat = _to_episode_base_relative(
+                    pose_mat, start_pose_mat
+                )
+            else:
+                rel_obs_pose_mat = convert_pose_mat_rep(
+                    pose_mat,
+                    base_pose_mat=start_pose_mat,
+                    pose_rep='relative',
+                    backward=False)
             
             rel_obs_pose = mat_to_pose10d(rel_obs_pose_mat)
             # obs_dict_np[f'robot{robot_id}_eef_pos_wrt_start'] = rel_obs_pose[:,:3]
@@ -173,7 +206,8 @@ def get_real_umi_obs_dict(
 def get_real_umi_action(
         action: np.ndarray,
         env_obs: Dict[str, np.ndarray], 
-        action_pose_repr: str='abs'
+        action_pose_repr: str='abs',
+        episode_start_pose: List[np.ndarray]=None,
     ):
 
     n_robots = int(action.shape[-1] // 10)
@@ -190,12 +224,22 @@ def get_real_umi_action(
         action_grip = action[..., start+9:start+10]
         action_pose_mat = pose10d_to_mat(action_pose10d)
 
-        # solve relative action
-        action_mat = convert_pose_mat_rep(
-            action_pose_mat, 
-            base_pose_mat=pose_mat,
-            pose_rep=action_pose_repr,
-            backward=True)
+        if action_pose_repr == EPISODE_BASE_RELATIVE:
+            if episode_start_pose is None:
+                raise ValueError('episode_start_pose is required for episode_base_relative')
+            start_pose_mat = pose_to_mat(
+                np.asarray(episode_start_pose[robot_idx], dtype=np.float64)
+            )
+            action_mat = _from_episode_base_relative(
+                action_pose_mat, start_pose_mat
+            )
+        else:
+            # Legacy checkpoints express action relative to the latest TCP.
+            action_mat = convert_pose_mat_rep(
+                action_pose_mat,
+                base_pose_mat=pose_mat,
+                pose_rep=action_pose_repr,
+                backward=True)
 
         # convert action to pose
         action_pose = mat_to_pose(action_mat)

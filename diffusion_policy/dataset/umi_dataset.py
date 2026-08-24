@@ -44,6 +44,21 @@ class UmiDataset(BaseDataset):
         self.pose_repr = pose_repr
         self.obs_pose_repr = self.pose_repr.get('obs_pose_repr', 'rel')
         self.action_pose_repr = self.pose_repr.get('action_pose_repr', 'rel')
+        canonical = 'episode_base_relative'
+        if (self.obs_pose_repr == canonical) != (self.action_pose_repr == canonical):
+            raise ValueError(
+                'obs_pose_repr and action_pose_repr must both use '
+                'episode_base_relative; mixed coordinate representations are forbidden'
+            )
+        if self.obs_pose_repr == canonical:
+            with zarr.ZipStore(dataset_path, mode='r') as coordinate_store:
+                coordinate_root = zarr.group(store=coordinate_store)
+                convention = coordinate_root.attrs.get('coordinate_convention', {})
+                if convention.get('name') != canonical or convention.get('version') != 1:
+                    raise ValueError(
+                        f'dataset {dataset_path} is missing the {canonical!r} coordinate '
+                        'receipt; rebuild it with the unified preprocessing pipeline'
+                    )
         
         if cache_dir is None:
             # load into memory store
@@ -357,9 +372,8 @@ class UmiDataset(BaseDataset):
                 
         # generate relative pose with respect to episode start
         for robot_id in range(self.num_robot):
-            # HACK: add noise to episode start pose
-            if (f'robot{other_robot_id}_eef_pos_wrt_start' not in self.shape_meta['obs']) and \
-                (f'robot{other_robot_id}_eef_rot_axis_angle_wrt_start' not in self.shape_meta['obs']):
+            if (f'robot{robot_id}_eef_pos_wrt_start' not in self.shape_meta['obs']) and \
+                (f'robot{robot_id}_eef_rot_axis_angle_wrt_start' not in self.shape_meta['obs']):
                 continue
             
             # convert pose to mat
@@ -369,14 +383,22 @@ class UmiDataset(BaseDataset):
             ], axis=-1))
             
             # get start pose
-            start_pose = obs_dict[f'robot{robot_id}_demo_start_pose'][0]
-            # HACK: add noise to episode start pose
-            start_pose += np.random.normal(scale=[0.05,0.05,0.05,0.05,0.05,0.05],size=start_pose.shape)
+            start_pose = obs_dict[f'robot{robot_id}_demo_start_pose'][0].copy()
+            if self.obs_pose_repr != 'episode_base_relative':
+                # Preserve legacy augmentation for legacy checkpoints only.
+                start_pose += np.random.normal(
+                    scale=[0.05,0.05,0.05,0.05,0.05,0.05],
+                    size=start_pose.shape,
+                )
             start_pose_mat = pose_to_mat(start_pose)
             rel_obs_pose_mat = convert_pose_mat_rep(
                 pose_mat,
                 base_pose_mat=start_pose_mat,
-                pose_rep='relative',
+                pose_rep=(
+                    'episode_base_relative'
+                    if self.obs_pose_repr == 'episode_base_relative'
+                    else 'relative'
+                ),
                 backward=False)
             
             rel_obs_pose = mat_to_pose10d(rel_obs_pose_mat)
@@ -409,7 +431,7 @@ class UmiDataset(BaseDataset):
             action_pose_mat = convert_pose_mat_rep(
                 action_mat, 
                 base_pose_mat=pose_mat[-1],
-                pose_rep=self.obs_pose_repr,
+                pose_rep=self.action_pose_repr,
                 backward=False)
         
             # convert pose to pos + rot6d representation
