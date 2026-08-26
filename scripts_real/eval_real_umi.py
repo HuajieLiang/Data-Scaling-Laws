@@ -217,11 +217,16 @@ def main(input, output, robot_ip, gripper_ip,
 
             print("Warming up policy inference")
             obs = env.get_obs()
+            episode_start_pose = [np.concatenate([
+                obs['robot0_eef_pos'],
+                obs['robot0_eef_rot_axis_angle']
+            ], axis=-1)[-1]]
             with torch.no_grad():
                 policy.reset()
                 obs_dict_np = get_real_umi_obs_dict(
                     env_obs=obs, shape_meta=cfg.task.shape_meta, 
-                    obs_pose_repr=obs_pose_rep)
+                    obs_pose_repr=obs_pose_rep,
+                    episode_start_pose=episode_start_pose)
                 obs_dict = dict_apply(obs_dict_np, 
                     lambda x: torch.from_numpy(x).unsqueeze(0).to(device))
                 result = policy.predict_action(obs_dict)
@@ -380,6 +385,11 @@ def main(input, output, robot_ip, gripper_ip,
                     # reduces overall latency
                     frame_latency = 1/60
                     precise_wait(eval_t_start - frame_latency, time_func=time.time)
+                    episode_start_obs = env.get_obs()
+                    episode_start_pose = [np.concatenate([
+                        episode_start_obs['robot0_eef_pos'],
+                        episode_start_obs['robot0_eef_rot_axis_angle']
+                    ], axis=-1)[-1]]
                     print("Started!")
                     iter_idx = 0
                     perv_target_pose = None
@@ -397,7 +407,8 @@ def main(input, output, robot_ip, gripper_ip,
                             s = time.time()
                             obs_dict_np = get_real_umi_obs_dict(
                                 env_obs=obs, shape_meta=cfg.task.shape_meta, 
-                                obs_pose_repr=obs_pose_rep)
+                                obs_pose_repr=obs_pose_rep,
+                                episode_start_pose=episode_start_pose)
                             obs_dict = dict_apply(obs_dict_np, 
                                 lambda x: torch.from_numpy(x).unsqueeze(0).to(device))
                             result = policy.predict_action(obs_dict)

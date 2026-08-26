@@ -44,21 +44,30 @@ class UmiDataset(BaseDataset):
         self.pose_repr = pose_repr
         self.obs_pose_repr = self.pose_repr.get('obs_pose_repr', 'rel')
         self.action_pose_repr = self.pose_repr.get('action_pose_repr', 'rel')
-        canonical = 'episode_base_relative'
-        if (self.obs_pose_repr == canonical) != (self.action_pose_repr == canonical):
+        deprecated = 'episode_base_relative'
+        if deprecated in {self.obs_pose_repr, self.action_pose_repr}:
             raise ValueError(
-                'obs_pose_repr and action_pose_repr must both use '
-                'episode_base_relative; mixed coordinate representations are forbidden'
+                'episode_base_relative is deprecated: rebuild the dataset as absolute '
+                'table-frame TCP and use obs_pose_repr=action_pose_repr=relative'
             )
-        if self.obs_pose_repr == canonical:
-            with zarr.ZipStore(dataset_path, mode='r') as coordinate_store:
-                coordinate_root = zarr.group(store=coordinate_store)
-                convention = coordinate_root.attrs.get('coordinate_convention', {})
-                if convention.get('name') != canonical or convention.get('version') != 1:
-                    raise ValueError(
-                        f'dataset {dataset_path} is missing the {canonical!r} coordinate '
-                        'receipt; rebuild it with the unified preprocessing pipeline'
-                    )
+        with zarr.ZipStore(dataset_path, mode='r') as coordinate_store:
+            coordinate_root = zarr.group(store=coordinate_store)
+            convention = coordinate_root.attrs.get('coordinate_convention', {})
+        dataset_convention = convention.get('name')
+        if dataset_convention == deprecated:
+            raise ValueError(
+                f'dataset {dataset_path} uses the obsolete {deprecated!r} receipt; '
+                'regenerate it because the former re-zero/axis-map preprocessing '
+                'does not match official UMI coordinates'
+            )
+        if dataset_convention == 'table_tcp_absolute' and (
+            self.obs_pose_repr != 'relative'
+            or self.action_pose_repr != 'relative'
+        ):
+            raise ValueError(
+                f'dataset {dataset_path} stores absolute table-frame TCP poses; '
+                'obs_pose_repr and action_pose_repr must both be relative'
+            )
         
         if cache_dir is None:
             # load into memory store
@@ -384,21 +393,15 @@ class UmiDataset(BaseDataset):
             
             # get start pose
             start_pose = obs_dict[f'robot{robot_id}_demo_start_pose'][0].copy()
-            if self.obs_pose_repr != 'episode_base_relative':
-                # Preserve legacy augmentation for legacy checkpoints only.
-                start_pose += np.random.normal(
-                    scale=[0.05,0.05,0.05,0.05,0.05,0.05],
-                    size=start_pose.shape,
-                )
+            start_pose += np.random.normal(
+                scale=[0.05,0.05,0.05,0.05,0.05,0.05],
+                size=start_pose.shape,
+            )
             start_pose_mat = pose_to_mat(start_pose)
             rel_obs_pose_mat = convert_pose_mat_rep(
                 pose_mat,
                 base_pose_mat=start_pose_mat,
-                pose_rep=(
-                    'episode_base_relative'
-                    if self.obs_pose_repr == 'episode_base_relative'
-                    else 'relative'
-                ),
+                pose_rep='relative',
                 backward=False)
             
             rel_obs_pose = mat_to_pose10d(rel_obs_pose_mat)

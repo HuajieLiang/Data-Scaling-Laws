@@ -8,8 +8,9 @@ echo ${run_dir}
 # accelerate launch --mixed_precision 'bf16' ../train.py \
 python ../train.py \
 --config-name=train_diffusion_unet_timm_umi_workspace \
+task=umi \
 multi_run.run_dir=${run_dir} multi_run.wandb_name_base=${logging_time} hydra.run.dir=${run_dir} hydra.sweep.dir=${run_dir} \
-task.dataset_path=../data/dataset/${task_name}/dataset.zarr.zip \
+task.dataset_path=../data/dataset_umi_zarr/${task_name}/dataset.zarr.zip \
 training.num_epochs=150 \
 dataloader.batch_size=32 \
 logging.name="${logging_time}_${task_name}" \

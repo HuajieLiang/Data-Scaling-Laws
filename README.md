@@ -36,6 +36,18 @@ bash run_slam.sh && bash run_generate_dataset.sh
 
 Alternatively, we provide processed dataset [here](https://huggingface.co/datasets/Fanqi-Lin/Processed-Task-Dataset/tree/main), ready for direct use in training.
 
+### Local UMI `pick_cube` pipeline
+
+本仓库新增的 UMI 采集数据处理流程统一放在上级目录的
+[`preprocess/README.md`](../preprocess/README.md)。它以
+`data/umi_data_lerobot_raw/pick_cube`（2026-08-25 的唯一 canonical raw 数据）为输入，
+依次完成 USB/top 时间同步、固定桌面系 camera/tracked→TCP、top/wrist mask 与 crop，
+并先写出可预览的 `data/umi_data_lerobot_preprocess/pick_cube` LeRobot，再按需转换为
+Zarr。预处理阶段的路径、相机参数、编码参数和刚体外参由
+`../preprocess/configs/pipeline_pick_cube_quality.yaml` 配置；Zarr 合并阶段的输入、
+输出和图像/夹爪参数由 `data/umi_data_lerobot_preprocess/config.yaml` 配置。不要再使用
+旧的 `pick_cube2` 或早期 raw 目录。
+
 You can visualize the dataset with a simple script:
 ```shell
 python visualize_dataset.py

@@ -11,7 +11,7 @@ name: umi_2cam
 
 # 数据时间戳统计得到约 23.13 Hz。源数据已经对齐且没有再降采样，因此观测和
 # action 均按连续帧采样；这也与 conversion.json 中的推荐值一致。
-dataset_frequeny: 23.129560978674107
+dataset_frequeny: 23.12959389342191
 obs_down_sample_steps: 1
 action_down_sample_steps: 1
 
