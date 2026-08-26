@@ -1,0 +1,23 @@
+name: zarr-convert
+channels:
+  - conda-forge
+dependencies:
+  # Keep the Zarr/Imagecodecs stack aligned with the original UMI pipeline.
+  - python=3.9
+  - numpy=1.24
+  - scipy=1.11
+  - pyarrow=14
+  - zarr=2.16
+  - numcodecs=0.11
+  # PyArrow 14 requires the pre-2.3 gflags ABI.
+  - gflags=2.2.2
+  - glog=0.7.0
+  - pyyaml=6.0
+  - tqdm=4.65
+  - pytest=7.4
+  - pip
+  - pip:
+      # The conda imagecodecs build does not expose JPEG XL.  The PyPI wheel does.
+      - imagecodecs==2023.9.18
+      - av==15.1.0
+      - opencv-contrib-python-headless==4.8.1.78
