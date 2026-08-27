@@ -80,6 +80,8 @@ exec "$python_bin" -m accelerate.commands.launch \
   "hydra.sweep.dir=$run_dir" \
   "${task_overrides[@]}" \
   "training.num_epochs=${NUM_EPOCHS:-200}" \
+  "training.checkpoint_every=${CHECKPOINT_EVERY:-10}" \
+  "checkpoint.topk.k=${CHECKPOINT_TOPK_K:-100}" \
   "training.gradient_accumulate_every=${GRADIENT_ACCUMULATE_EVERY:-2}" \
   "dataloader.batch_size=${BATCH_SIZE:-512}" \
   "val_dataloader.batch_size=${VAL_BATCH_SIZE:-128}" \

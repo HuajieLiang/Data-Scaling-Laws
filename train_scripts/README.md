@@ -58,8 +58,14 @@ DATASET_PATH=data/other/dataset.zarr.zip \
 PYTHON_BIN=/path/to/python \
 MIXED_PRECISION=bf16 \
 NUM_EPOCHS=300 \
+CHECKPOINT_EVERY=10 \
+CHECKPOINT_TOPK_K=100 \
 ./train_scripts/pick_cube_1cam_real.sh
 ```
+
+pick_cube 默认每 10 个 epoch 触发一次 checkpoint，并最多保留 100 个按验证指标筛选的
+top-k `.ckpt`。`latest.ckpt` 是用于续训的独立最新断点，因此目录中最多可能有 101 个
+`.ckpt` 文件；若要严格限制总数为 100，可将 `CHECKPOINT_TOPK_K` 设为 `99`。
 
 默认 `MIXED_PRECISION=bf16`，通过 `accelerate --mixed_precision bf16` 启动，适用于支持
 BF16 的 GPU。若需要诊断，可显式设置 `MIXED_PRECISION=fp16` 或 `no`；脚本会拒绝其它
