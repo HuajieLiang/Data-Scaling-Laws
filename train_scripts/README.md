@@ -66,13 +66,18 @@ CHECKPOINT_TOPK_K=100 \
 前 2 秒裁剪后的 UMI 1cam 数据使用：
 
 ```bash
+# 输入 TCP 坐标（with state）
 ./train_scripts/pick_cube_trim2s_1cam_umi.sh
+
+# 不输入 TCP 坐标（no state）
+./train_scripts/pick_cube_trim2s_1cam_umi_no_state.sh
 ```
 
 脚本默认读取
 `data/dataset_umi_zarr/pick_cube_trim2s_1cam/dataset.zarr.zip`，并沿用 UMI 1cam 的
-23.12959389342191 Hz、观测/动作下采样 3/3 和 proprioception 配置；可用
-`DATASET_PATH`、`NUM_EPOCHS`、`BATCH_SIZE` 等环境变量覆盖。
+23.12959389342191 Hz、观测/动作下采样 3/3 配置；with-state 启用 proprioception，
+no-state 禁用 proprioception。两者均可用 `DATASET_PATH`、`NUM_EPOCHS`、`BATCH_SIZE`
+等环境变量覆盖。
 
 pick_cube 默认每 10 个 epoch 触发一次 checkpoint，并最多保留 100 个按验证指标筛选的
 top-k `.ckpt`。`latest.ckpt` 是用于续训的独立最新断点，因此目录中最多可能有 101 个
