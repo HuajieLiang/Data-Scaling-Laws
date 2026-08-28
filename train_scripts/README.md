@@ -14,7 +14,7 @@ pick_cube 只保留四组物理/相机组合，每组都提供“输入实际 TC
 
 ## 坐标和训练含义
 
-两个 Zarr 都保存固定桌面坐标系下的绝对 TCP：
+所有 pick_cube Zarr 都保存固定桌面坐标系下的绝对 TCP：
 
 ```text
 +X 向镜头前方，+Y 向左，+Z 向上
@@ -31,7 +31,8 @@ task.pose_repr.action_pose_repr=relative
 ```
 
 这表示只在 `UmiDataset` 取样时将绝对 TCP 转换为 current-TCP-relative observation 和
-future action，数据文件本身不会逐 episode 归零。`*_no_state.sh` 仅设置
+future action，数据文件本身不会逐 episode 归零。因此“有坐标”版本输入网络的也不是
+桌面系绝对 xyz，而是当前 TCP 局部系中的历史相对位姿。`*_no_state.sh` 仅设置
 `task.ignore_proprioception=true`，不改变 action、坐标转换或图像处理；有坐标版本则保留
 `robot0_eef_pos`、旋转和夹爪作为策略输入。
 
@@ -39,8 +40,10 @@ future action，数据文件本身不会逐 episode 归零。`*_no_state.sh` 仅
 `umi` task，2cam 使用 `umi_2cam` task；后者显式启用第二相机并共享 RGB encoder。
 
 默认仅有这些数据相关差异：UMI 使用数据统计得到的 `23.12959389342191 Hz`，真机使用
-`20 Hz`；1cam 的 observation/action downsample 为 `3/3`，2cam 为 `1/1`。其余优化器、
-策略、相对位姿语义和 BF16 启动方式由公共脚本统一。
+`20 Hz`；1cam 的 observation/action downsample 为 `3/3`，2cam 为 `1/1`。当前 UMI
+2cam 默认使用 `pick_cube_trim2s_2cam`，与已部署 1cam 的 `pick_cube_trim2s_1cam`
+保持相同 episode 和裁剪区间。其余优化器、策略、相对位姿语义和 BF16 启动方式由
+公共脚本统一。
 
 ## 运行和覆盖参数
 
@@ -85,4 +88,6 @@ top-k `.ckpt`。`latest.ckpt` 是用于续训的独立最新断点，因此目�
 
 默认 `MIXED_PRECISION=bf16`，通过 `accelerate --mixed_precision bf16` 启动，适用于支持
 BF16 的 GPU。若需要诊断，可显式设置 `MIXED_PRECISION=fp16` 或 `no`；脚本会拒绝其它
-值。每次运行会检查数据文件存在，并生成独立的 `data/outputs/<日期>/...` 目录。
+值。每次运行会在加载模型前检查 Zarr 收据必须为 `table_tcp_absolute`、固定桌面轴、
+无轴置换、无 episode 归零，并核对所需相机字段，然后生成独立的
+`data/outputs/<日期>/...` 目录。

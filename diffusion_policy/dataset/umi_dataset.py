@@ -60,14 +60,27 @@ class UmiDataset(BaseDataset):
                 'regenerate it because the former re-zero/axis-map preprocessing '
                 'does not match official UMI coordinates'
             )
-        if dataset_convention == 'table_tcp_absolute' and (
-            self.obs_pose_repr != 'relative'
-            or self.action_pose_repr != 'relative'
-        ):
-            raise ValueError(
-                f'dataset {dataset_path} stores absolute table-frame TCP poses; '
-                'obs_pose_repr and action_pose_repr must both be relative'
+        if dataset_convention == 'table_tcp_absolute':
+            expected_axes = {'+X': 'forward', '+Y': 'left', '+Z': 'up'}
+            invalid_contract = (
+                convention.get('frame') != 'fixed_table_frame'
+                or convention.get('table_axes') != expected_axes
+                or convention.get('axis_map_applied') is not False
+                or convention.get('episode_rezero_applied') is not False
             )
+            if invalid_contract:
+                raise ValueError(
+                    f'dataset {dataset_path} has an invalid table-TCP receipt: '
+                    f'{convention}'
+                )
+            if (
+                self.obs_pose_repr != 'relative'
+                or self.action_pose_repr != 'relative'
+            ):
+                raise ValueError(
+                    f'dataset {dataset_path} stores absolute table-frame TCP poses; '
+                    'obs_pose_repr and action_pose_repr must both be relative'
+                )
         
         if cache_dir is None:
             # load into memory store
