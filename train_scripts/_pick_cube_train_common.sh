@@ -41,6 +41,12 @@ if [[ ! -f "$PICK_CUBE_DATASET_PATH" ]]; then
   echo "Dataset not found: $project_dir/$PICK_CUBE_DATASET_PATH" >&2
   exit 1
 fi
+camera_count=1
+if [[ "$PICK_CUBE_TASK" == umi_2cam ]]; then
+  camera_count=2
+fi
+"$python_bin" train_scripts/validate_pick_cube_dataset.py \
+  "$PICK_CUBE_DATASET_PATH" --camera-count "$camera_count"
 
 logging_time=$(date "+%d-%H.%M.%S")
 now_date=$(date "+%Y.%m.%d")
@@ -49,7 +55,9 @@ run_dir="data/outputs/${now_date}/${logging_time}_${PICK_CUBE_RUN_TAG}"
 echo "Source: $PICK_CUBE_SOURCE"
 echo "Dataset: $project_dir/$PICK_CUBE_DATASET_PATH"
 echo "Task: $PICK_CUBE_TASK"
-echo "Proprioception (absolute table-frame TCP): $([[ "$PICK_CUBE_IGNORE_PROPRIOCEPTION" == true ]] && echo disabled || echo enabled)"
+echo "Disk pose: absolute TCP in fixed table axes (+X forward, +Y left, +Z up)"
+echo "Model pose: current-TCP-relative observation and action"
+echo "Proprioception: $([[ "$PICK_CUBE_IGNORE_PROPRIOCEPTION" == true ]] && echo disabled || echo enabled)"
 echo "Mixed precision: $mixed_precision"
 echo "Output directory: $project_dir/$run_dir"
 

@@ -15,6 +15,13 @@ dataset_frequeny: 23.12959389342191
 obs_down_sample_steps: 1
 action_down_sample_steps: 1
 
+# Keep the same pose contract as the one-camera task. Zarr stores absolute TCP
+# in the fixed table frame; UmiDataset rebases both observation and action into
+# the latest/current TCP body frame while sampling.
+pose_repr:
+  obs_pose_repr: relative
+  action_pose_repr: relative
+
 shape_meta:
   obs:
     camera1_rgb:
@@ -30,6 +37,8 @@ shape_meta:
 # 但 Dataset 不会读取它，训练第一步就会因缺少 key 失败。
 dataset:
   shape_meta: ${task.shape_meta}
+  pose_repr: ${task.pose_repr}
 
 in_the_wild_dataset:
   shape_meta: ${task.shape_meta}
+  pose_repr: ${task.pose_repr}
