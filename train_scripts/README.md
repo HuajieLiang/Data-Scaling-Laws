@@ -8,6 +8,14 @@ pick_cube 只保留四组物理/相机组合，每组都提供“输入实际 TC
 | UMI | `pick_cube_1cam_umi.sh` / `pick_cube_1cam_umi_no_state.sh` | `pick_cube_2cam_umi.sh` / `pick_cube_2cam_umi_no_state.sh` |
 | 真机 | `pick_cube_1cam_real.sh` / `pick_cube_1cam_real_no_state.sh` | `pick_cube_2cam_real.sh` / `pick_cube_2cam_real_no_state.sh` |
 
+三个单相机 UMI/真机混合数据也各自提供有坐标与无坐标版本：
+
+| 混合策略 | 有坐标 | 无坐标 |
+|---|---|---|
+| real20 + UMI all | `pick_cube_1cam_mix_real20_umi_all.sh` | `pick_cube_1cam_mix_real20_umi_all_no_state.sh` |
+| UMI20 + real all | `pick_cube_1cam_mix_umi20_real_all.sh` | `pick_cube_1cam_mix_umi20_real_all_no_state.sh` |
+| real all + UMI all | `pick_cube_1cam_mix_real_all_umi_all.sh` | `pick_cube_1cam_mix_real_all_umi_all_no_state.sh` |
+
 脚本共享 `_pick_cube_train_common.sh`，只有数据路径、来源、相机数量、采样频率和是否
 启用 proprioception 不同。所有脚本都使用同一个官方 UMI 训练入口：
 `train_diffusion_unet_timm_umi_workspace` + `UmiDataset`。

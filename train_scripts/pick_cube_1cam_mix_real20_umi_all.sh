@@ -8,10 +8,10 @@ export PICK_CUBE_DATASET_PATH=${DATASET_PATH:-data/dataset_mix_zarr/pick_cube_1c
 export PICK_CUBE_IGNORE_PROPRIOCEPTION=false
 # One scalar is required by the current UmiDataset. This is the aggregate
 # frame rate: total frames / (UMI duration + real-robot duration).
-export PICK_CUBE_DATASET_FREQUENCY=${DATASET_FREQUENCY:-22.000000752248358}
+export PICK_CUBE_DATASET_FREQUENCY=${DATASET_FREQUENCY:-19.999804708360745}
 export PICK_CUBE_OBS_DOWNSAMPLE=3
 export PICK_CUBE_ACTION_DOWNSAMPLE=3
-export NUM_EPOCHS=${NUM_EPOCHS:-200}
+export NUM_EPOCHS=${NUM_EPOCHS:-500}
 export GRADIENT_ACCUMULATE_EVERY=${GRADIENT_ACCUMULATE_EVERY:-2}
 export BATCH_SIZE=${BATCH_SIZE:-512}
 export VAL_BATCH_SIZE=${VAL_BATCH_SIZE:-128}
