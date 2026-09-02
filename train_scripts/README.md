@@ -55,6 +55,18 @@ future action，数据文件本身不会逐 episode 归零。因此“有坐标�
 
 ## 运行和覆盖参数
 
+新采集的 0902 单独数据和 0828+0902 混合数据各有 observation/action
+`down_sample_steps=1` 与 `down_sample_steps=3` 两个版本（均为 1cam、with-state）：
+
+| 数据 | downsample=1 | downsample=3 |
+|---|---|---|
+| 0902 | `pick_cube_0902_1cam_umi_ds1.sh` | `pick_cube_0902_1cam_umi_ds3.sh` |
+| 0828+0902 | `pick_cube_0828_0902_1cam_umi_ds1.sh` | `pick_cube_0828_0902_1cam_umi_ds3.sh` |
+
+两组脚本默认分别读取 `data/dataset_umi_zarr/pick_cube_0902_1cam` 和
+`data/dataset_umi_zarr/pick_cube_0828_0902_1cam`，训练频率来自对应 Zarr 的
+`conversion.json`。
+
 从 `Data-Scaling-Laws` 根目录执行，例如：
 
 ```bash
