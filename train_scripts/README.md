@@ -67,11 +67,26 @@ future action，数据文件本身不会逐 episode 归零。因此“有坐标�
 `data/dataset_umi_zarr/pick_cube_0828_0902_1cam`，训练频率来自对应 Zarr 的
 `conversion.json`。
 
+0903 的精确预处理与 crop-only 数据各提供一个 1cam、no-state 脚本：
+
+| 0903 图像预处理 | no-state 训练脚本 |
+|---|---|
+| 鱼眼展平、仿射映射等精确预处理 | `pick_cube_0903_1cam_umi_no_state.sh` |
+| 仅按对应位置 crop | `pick_cube_0903_crop_only_1cam_umi_no_state.sh` |
+
+两者分别读取 `data/dataset_umi_zarr/pick_cube_0903_1cam` 与
+`data/dataset_umi_zarr/pick_cube_0903_crop_only_1cam`。按照两份 `conversion.json` 的
+推荐值，默认训练频率均为 `23.129643841808488 Hz`，observation/action downsample 均为
+`1/1`。脚本设置 `task.ignore_proprioception=true`，因此位姿与夹爪 state 不作为策略输入；
+action 仍由 Zarr 中的 TCP 轨迹生成。
+
 从 `Data-Scaling-Laws` 根目录执行，例如：
 
 ```bash
 ./train_scripts/pick_cube_1cam_umi.sh
 ./train_scripts/pick_cube_2cam_real_no_state.sh
+./train_scripts/pick_cube_0903_1cam_umi_no_state.sh
+./train_scripts/pick_cube_0903_crop_only_1cam_umi_no_state.sh
 ```
 
 常用覆盖方式：
