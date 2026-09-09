@@ -76,9 +76,21 @@ future action，数据文件本身不会逐 episode 归零。因此“有坐标�
 
 两者分别读取 `data/dataset_umi_zarr/pick_cube_0903_1cam` 与
 `data/dataset_umi_zarr/pick_cube_0903_crop_only_1cam`。按照两份 `conversion.json` 的
-推荐值，默认训练频率均为 `23.129643841808488 Hz`，observation/action downsample 均为
+腕部相机同步后的收据值，默认训练频率为 `102.04612220476139 Hz`，observation/action downsample 均为
 `1/1`。脚本设置 `task.ignore_proprioception=true`，因此位姿与夹爪 state 不作为策略输入；
 action 仍由 Zarr 中的 TCP 轨迹生成。
+
+0909 的 wrist-only 数据使用：
+
+```bash
+./train_scripts/pick_cube_0909_1cam_umi_ds3.sh
+```
+
+该脚本默认读取
+`data/dataset_umi_zarr/pick_cube_0909_1cam/dataset.zarr.zip`，启用 TCP/旋转/夹爪
+proprioception，并将数据频率设为 `60 Hz`、observation/action downsample 设为 `3/3`。
+因此模型 action 时间步为 `60 / 3 = 20 Hz`，与当前 Rokae 部署配置的
+`policy_frequency_hz: 20` 一致。该 Zarr 当前包含合并到 0909 目录中的 208 条轨迹。
 
 从 `Data-Scaling-Laws` 根目录执行，例如：
 
