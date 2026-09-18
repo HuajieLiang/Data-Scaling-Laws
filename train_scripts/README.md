@@ -92,6 +92,25 @@ proprioception，并将数据频率设为 `60 Hz`、observation/action downsampl
 因此模型 action 时间步为 `60 / 3 = 20 Hz`，与当前 Rokae 部署配置的
 `policy_frequency_hz: 20` 一致。该 Zarr 当前包含合并到 0909 目录中的 208 条轨迹。
 
+sorting_0915 的双臂数据使用：
+
+```bash
+# 对应 data/umi_data_lerobot_preprocess/sorting_0915_merged
+./train_scripts/sorting_0915_merged.sh
+
+# 对应 data/umi_data_lerobot_preprocess/sorting_0915_merged_2cam
+./train_scripts/sorting_0915_merged_2cam.sh
+```
+
+这两份脚本训练 `data/dataset_umi_zarr/sorting_0915_3cam/dataset.zarr.zip` 和
+`data/dataset_umi_zarr/sorting_0915_2cam/dataset.zarr.zip`，分别映射到上面的
+LeRobot 合并目录。二者使用 `train_diffusion_unet_umi_bimanual_workspace` +
+`UmiDataset`，默认频率为转换收据中的 `62.46062248913964 Hz`，observation/action
+downsample 均为 `1/1`，并在启动前校验 14D 双臂 action、`left_frame0_common`
+坐标收据和相机字段。3cam 版本额外启用 `camera2_rgb`，2cam 版本只使用
+`camera0_rgb/camera1_rgb`。脚本默认共享 RGB encoder，并把 ViT aggregation 覆盖为
+`cls_token`。
+
 从 `Data-Scaling-Laws` 根目录执行，例如：
 
 ```bash
@@ -99,6 +118,7 @@ proprioception，并将数据频率设为 `60 Hz`、observation/action downsampl
 ./train_scripts/pick_cube_2cam_real_no_state.sh
 ./train_scripts/pick_cube_0903_1cam_umi_no_state.sh
 ./train_scripts/pick_cube_0903_crop_only_1cam_umi_no_state.sh
+./train_scripts/sorting_0915_merged.sh
 ```
 
 常用覆盖方式：
